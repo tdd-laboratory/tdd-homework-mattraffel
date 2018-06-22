@@ -10,12 +10,13 @@ US until 15-20 years later.) It is celebrated by 77.9% of the population--
 trending toward 80.                                                                
 '''
 
+
 class TestCase(unittest.TestCase):
 
     # Helper function
     def assert_extract(self, text, extractors, *expected):
         actual = [x[1].group(0) for x in library.scan(text, extractors)]
-        self.assertEquals(str(actual), str([x for x in expected]))
+        self.assertEqual(str(actual), str([x for x in expected]))
 
     # First unit test; prove that if we scan NUM_CORPUS looking for mixed_ordinals,
     # we find "5th" and "1st".
@@ -30,6 +31,57 @@ class TestCase(unittest.TestCase):
     def test_no_integers(self):
         self.assert_extract("no integers", library.integers)
 
+    # fourth unit test; prove that if we look for integers, we find four of them.
+    def test_getdates(self):
+        self.assert_extract('I was born on 2015-07-25.', library.dates_iso8601, '2015-07-25')
+
+   # 5th unit test; prove that if we look for integers where there are none, we get no results.
+    def test_no_dates(self):
+        self.assert_extract("no dates", library.dates_iso8601)
+
+    # 6th unit test; prove that if we look for integers, we find four of them.
+    def test_wordy_date(self):
+        self.assert_extract('I was born on 25 Jan 2017.', library.dates_fmt2, '25 Jan 2017')
+
+    # 7
+    def test_no_dates_for_fmt2(self):
+        self.assert_extract("no dates", library.dates_fmt2)
+
+    # 8
+    def test_incorrect_format_for_fmt2(self):
+        self.assert_extract("01/25/2017", library.dates_fmt2)
+
+    # 9
+    def test_DOW_included_for_fmt2(self):
+        self.assert_extract('I was born on Mon, 25 Jan 2017.', library.dates_fmt2, '25 Jan 2017')
+
+    # 10
+    def test_isodates_with_time(self):
+        self.assert_extract('I was born on 2015-07-25, 10:15AM', library.dates_iso8601, '2015-07-25')
+
+    # 11
+    def test_isodates_incorrect_format(self):
+        self.assert_extract("01/25/2017", library.dates_iso8601)
+
+    # 13
+    def test_alice_needs_to_take_a_chill_pill(self):
+        self.assert_extract("I couldn't work under such micromanaged environments :D", library.dates_iso8601)
+
+    # 14
+    def test_wordy_date_with_comma(self):
+        self.assert_extract('I was born on 25 Jan, 2017.', library.dates_fmt2, '25 Jan, 2017')
+
+    # 15
+    def test_date_format_with_time(self):
+        self.assert_extract("01/25/2017 10:18AM", library.dates_fmt2, "01/25/2017 10:18AM")
+
+    # 16
+    def test_date_format_with_24hr_time(self):
+        self.assert_extract("01/25/2017 18:18", library.dates_fmt2, "01/25/2017 18:18")
+
+    # 17
+    def test_wordy_date_with_invalid_time(self):
+        self.assert_extract("01/25/2017 99:78", library.dates_fmt2)
 
 if __name__ == '__main__':
     unittest.main()
